@@ -33,7 +33,7 @@ type Test struct {
 	Args  []interface{}   `json:"args"`
 }
 
-func Test_getPredicate(t *testing.T) {
+func Test_BuildPredicate(t *testing.T) {
 	is := require.New(t)
 	jsonBytes, err := yaml.YAMLToJSON(yamlBytes)
 	is.NoError(err)
@@ -56,7 +56,7 @@ func Test_getPredicate(t *testing.T) {
 	}
 }
 
-func launch(t *testing.T) string {
+func runCerbos(ctx context.Context, t *testing.T) string {
 	is := require.New(t)
 	pool, err := dockertest.NewPool("")
 	is.NoError(err, "Could not connect to docker: %s", err)
@@ -102,7 +102,7 @@ func launch(t *testing.T) string {
 		deadline = time.Now().Add(5 * time.Minute)
 	}
 
-	ctx, cancelFunc := context.WithDeadline(context.Background(), deadline)
+	ctx, cancelFunc := context.WithDeadline(ctx, deadline)
 	t.Cleanup(cancelFunc)
 
 	port := resource.GetPort("3592/tcp")
@@ -131,7 +131,8 @@ func launch(t *testing.T) string {
 }
 
 func TestIntegration(t *testing.T) {
-	cerbosAddr := launch(t)
+	ctx := context.Background()
+	cerbosAddr := runCerbos(ctx, t)
 
 	is := require.New(t)
 	nick, simon, mary, christina, aleks := "Nick", "Simon", "Mary", "Christina", "Aleks"
@@ -160,7 +161,6 @@ func TestIntegration(t *testing.T) {
 
 	c, err := cerbos.New(cerbosAddr, cerbos.WithPlaintext())
 	is.NoError(err)
-	ctx := context.Background()
 	repo, err := db.New(BuildPredicateType(BuildPredicate), ent.Log(t.Log), ent.Debug())
 	is.NoError(err)
 	err = repo.SetupDatabase(ctx)
