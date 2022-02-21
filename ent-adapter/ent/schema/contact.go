@@ -2,9 +2,9 @@ package schema
 
 import (
 	"entgo.io/ent"
+	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"time"
-	"entgo.io/ent/schema/edge"
 )
 
 // Contact holds the schema definition for the Contact entity.

@@ -2,11 +2,11 @@ package main
 
 import (
 	"entgo.io/ent/dialect/sql"
-	responsev1 "github.com/cerbos/cerbos/api/genpb/cerbos/response/v1"
+	"errors"
 	"fmt"
+	responsev1 "github.com/cerbos/cerbos/api/genpb/cerbos/response/v1"
 	"github.com/iancoleman/strcase"
 	"strings"
-	"errors"
 )
 
 var toSqlOp = map[string]sql.Op{

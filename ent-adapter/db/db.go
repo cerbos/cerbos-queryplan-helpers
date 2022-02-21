@@ -1,17 +1,17 @@
 package db
 
 import (
-	"github.com/cerbos/cerbos-go-adapters/ent-adapter/ent"
-	_ "embed"
-	_ "github.com/mattn/go-sqlite3"
 	"context"
+	_ "embed"
 	"encoding/json"
-	"fmt"
 	"entgo.io/ent/dialect"
+	"entgo.io/ent/dialect/sql"
+	"errors"
+	"fmt"
+	"github.com/cerbos/cerbos-go-adapters/ent-adapter/ent"
 	"github.com/cerbos/cerbos-go-adapters/ent-adapter/ent/user"
 	responsev1 "github.com/cerbos/cerbos/api/genpb/cerbos/response/v1"
-	"errors"
-	"entgo.io/ent/dialect/sql"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 //go:embed seed.json

@@ -1,29 +1,27 @@
 package main
 
 import (
-	"testing"
-	_ "embed"
-	"github.com/stretchr/testify/require"
-	"github.com/ghodss/yaml"
-	"encoding/json"
-	responsev1 "github.com/cerbos/cerbos/api/genpb/cerbos/response/v1"
-	"google.golang.org/protobuf/encoding/protojson"
-	"entgo.io/ent/dialect"
-	cerbos "github.com/cerbos/cerbos/client"
 	"context"
-	"github.com/cerbos/cerbos-go-adapters/ent-adapter/ent"
-	"strconv"
-	"github.com/ory/dockertest/v3"
-	"time"
-	"net/http"
+	_ "embed"
+	"encoding/json"
+	"entgo.io/ent/dialect"
 	"errors"
 	"fmt"
-	"github.com/ory/dockertest/v3/docker"
-	"runtime"
 	"github.com/cerbos/cerbos-go-adapters/ent-adapter/db"
+	"github.com/cerbos/cerbos-go-adapters/ent-adapter/ent"
+	responsev1 "github.com/cerbos/cerbos/api/genpb/cerbos/response/v1"
+	cerbos "github.com/cerbos/cerbos/client"
+	"github.com/ghodss/yaml"
+	"github.com/ory/dockertest/v3"
+	"github.com/ory/dockertest/v3/docker"
+	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/encoding/protojson"
+	"net/http"
 	"path/filepath"
-	"os"
-	"log"
+	"runtime"
+	"strconv"
+	"testing"
+	"time"
 )
 
 //go:embed db/testdata/query_plans.yaml
@@ -63,24 +61,21 @@ func launch(t *testing.T) string {
 	pool, err := dockertest.NewPool("")
 	is.NoError(err, "Could not connect to docker: %s", err)
 
-	options := &dockertest.RunOptions{
-		Repository: "ghcr.io/cerbos/cerbos",
-		Tag:        "0.12.0",
-		Cmd:        []string{"server", "--config=/config/conf.yaml"},
-	}
-
 	_, currFile, _, ok := runtime.Caller(0)
 	if !ok {
 		t.Fatalf("could not detect current file directory")
 	}
-	pwd, err := os.Getwd()
-	if err != nil {
-		log.Fatalf("failed to get working directory: %s", err)
+
+	srcDir := filepath.Join(filepath.Dir(currFile), "cerbos")
+
+	options := &dockertest.RunOptions{
+		Repository: "ghcr.io/cerbos/cerbos",
+		Tag:        "0.12.0",
+		Cmd:        []string{"server", "--config=/config/conf.yaml"},
+		WorkingDir: srcDir,
 	}
-	t.Log("PWD:", pwd)
+
 	resource, err := pool.RunWithOptions(options, func(config *docker.HostConfig) {
-		srcDir := filepath.Join(filepath.Dir(currFile), "cerbos")
-		t.Log(srcDir)
 		config.Mounts = []docker.HostMount{
 			{
 				Target: "/config",

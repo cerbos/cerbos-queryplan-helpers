@@ -2,13 +2,13 @@ package db
 
 import (
 	"context"
-	"testing"
-	"github.com/stretchr/testify/require"
-	"github.com/cerbos/cerbos-go-adapters/ent-adapter/ent/predicate"
-	"github.com/cerbos/cerbos-go-adapters/ent-adapter/ent"
 	"encoding/json"
 	"entgo.io/ent/dialect/sql"
+	"github.com/cerbos/cerbos-go-adapters/ent-adapter/ent"
 	"github.com/cerbos/cerbos-go-adapters/ent-adapter/ent/contact"
+	"github.com/cerbos/cerbos-go-adapters/ent-adapter/ent/predicate"
+	"github.com/stretchr/testify/require"
+	"testing"
 )
 
 func Test_ReadSeedFile(t *testing.T) {
