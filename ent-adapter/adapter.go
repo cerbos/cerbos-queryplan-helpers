@@ -1,4 +1,4 @@
-package db
+package main
 
 import (
 	"entgo.io/ent/dialect/sql"
@@ -29,7 +29,13 @@ var toEntField = map[string]string{
 
 var ExpressionExpectedError = errors.New("expected expression")
 
-func getPredicate(e *responsev1.ResourcesQueryPlanResponse_Expression_Operand_Expression) (p *sql.Predicate, err error) {
+type BuildPredicateType func(e *responsev1.ResourcesQueryPlanResponse_Expression_Operand_Expression) (p *sql.Predicate, err error)
+
+func (t BuildPredicateType) BuildPredicate(e *responsev1.ResourcesQueryPlanResponse_Expression_Operand_Expression) (p *sql.Predicate, err error) {
+	return t(e)
+}
+
+func BuildPredicate(e *responsev1.ResourcesQueryPlanResponse_Expression_Operand_Expression) (p *sql.Predicate, err error) {
 	if e == nil {
 		return nil, nil
 	}
@@ -40,7 +46,7 @@ func getPredicate(e *responsev1.ResourcesQueryPlanResponse_Expression_Operand_Ex
 			if oe, ok := o.GetNode().(*responsev1.ResourcesQueryPlanResponse_Expression_Operand_Expression); !ok {
 				return nil, ExpressionExpectedError
 			} else {
-				ps[i], err = getPredicate(oe)
+				ps[i], err = BuildPredicate(oe)
 				if err != nil {
 					return nil, err
 				}
@@ -53,7 +59,7 @@ func getPredicate(e *responsev1.ResourcesQueryPlanResponse_Expression_Operand_Ex
 			if oe, ok := o.GetNode().(*responsev1.ResourcesQueryPlanResponse_Expression_Operand_Expression); !ok {
 				return nil, ExpressionExpectedError
 			} else {
-				ps[i], err = getPredicate(oe)
+				ps[i], err = BuildPredicate(oe)
 				if err != nil {
 					return nil, err
 				}
@@ -65,7 +71,7 @@ func getPredicate(e *responsev1.ResourcesQueryPlanResponse_Expression_Operand_Ex
 		if oe, ok := o.GetNode().(*responsev1.ResourcesQueryPlanResponse_Expression_Operand_Expression); !ok {
 			return nil, ExpressionExpectedError
 		} else {
-			p, err = getPredicate(oe)
+			p, err = BuildPredicate(oe)
 			if err != nil {
 				return nil, err
 			}
@@ -99,7 +105,7 @@ func getPredicate(e *responsev1.ResourcesQueryPlanResponse_Expression_Operand_Ex
 func newBuilder(operand *responsev1.ResourcesQueryPlanResponse_Expression_Operand) (func(*sql.Builder) *sql.Builder, error) {
 	switch e := operand.Node.(type) {
 	case *responsev1.ResourcesQueryPlanResponse_Expression_Operand_Expression:
-		p, err := getPredicate(e)
+		p, err := BuildPredicate(e)
 		if err != nil {
 			return nil, err
 		}

@@ -14,7 +14,7 @@ import (
 func Test_ReadSeedFile(t *testing.T) {
 	is := require.New(t)
 	// Create an ent.Client with in-memory SQLite database.
-	c, err := New(ent.Log(t.Log), ent.Debug())
+	c, err := New(nil, ent.Log(t.Log), ent.Debug())
 	client := c.client
 	defer client.Close()
 	ctx := context.Background()

@@ -17,8 +17,13 @@ import (
 //go:embed seed.json
 var seed []byte
 
+type predicateBuilder interface {
+	BuildPredicate(e *responsev1.ResourcesQueryPlanResponse_Expression_Operand_Expression) (p *sql.Predicate, err error)
+}
+
 type Client struct {
-	client *ent.Client
+	client           *ent.Client
+	predicateBuilder predicateBuilder
 }
 
 func (cli *Client) GetContacts(ctx context.Context, filter *responsev1.ResourcesQueryPlanResponse_Filter) ([]*ent.Contact, error) {
@@ -31,7 +36,7 @@ func (cli *Client) GetContacts(ctx context.Context, filter *responsev1.Resources
 	case responsev1.ResourcesQueryPlanResponse_Filter_KIND_ALWAYS_ALLOWED:
 		return cli.client.Contact.Query().All(ctx)
 	case responsev1.ResourcesQueryPlanResponse_Filter_KIND_CONDITIONAL:
-		p, err := getPredicate(filter.Condition.GetNode().(*responsev1.ResourcesQueryPlanResponse_Expression_Operand_Expression))
+		p, err := cli.predicateBuilder.BuildPredicate(filter.Condition.GetNode().(*responsev1.ResourcesQueryPlanResponse_Expression_Operand_Expression))
 		if err != nil {
 			return nil, err
 		}
@@ -45,12 +50,12 @@ func (cli *Client) GetContacts(ctx context.Context, filter *responsev1.Resources
 	return nil, errors.New("unknown filter kind")
 }
 
-func New(options ...ent.Option) (*Client, error) {
+func New(b predicateBuilder, options ...ent.Option) (*Client, error) {
 	c, err := ent.Open(dialect.SQLite, "file:ent?mode=memory&cache=shared&_fk=1", options...)
 	if err != nil {
 		return nil, err
 	}
-	return &Client{client: c}, nil
+	return &Client{client: c, predicateBuilder: b}, nil
 }
 
 func (cli *Client) GetUserByUsername(ctx context.Context, username string) (*ent.User, error) {

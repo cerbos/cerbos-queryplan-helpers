@@ -1,4 +1,4 @@
-package db
+package main
 
 import (
 	"testing"
@@ -13,9 +13,20 @@ import (
 	"context"
 	"github.com/cerbos/cerbos-go-adapters/ent-adapter/ent"
 	"strconv"
+	"github.com/ory/dockertest/v3"
+	"time"
+	"net/http"
+	"errors"
+	"fmt"
+	"github.com/ory/dockertest/v3/docker"
+	"runtime"
+	"github.com/cerbos/cerbos-go-adapters/ent-adapter/db"
+	"path/filepath"
+	"os"
+	"log"
 )
 
-//go:embed testdata/query_plans.yaml
+//go:embed db/testdata/query_plans.yaml
 var yamlBytes []byte
 
 type Test struct {
@@ -37,7 +48,7 @@ func Test_getPredicate(t *testing.T) {
 			e := new(responsev1.ResourcesQueryPlanResponse_Expression_Operand)
 			err := protojson.Unmarshal(tt.Input, e)
 			is.NoError(err)
-			p, err := getPredicate(e.Node.(*responsev1.ResourcesQueryPlanResponse_Expression_Operand_Expression))
+			p, err := BuildPredicate(e.Node.(*responsev1.ResourcesQueryPlanResponse_Expression_Operand_Expression))
 			is.NoError(err)
 			p.SetDialect(dialect.Postgres)
 			q, args := p.Query()
@@ -47,7 +58,86 @@ func Test_getPredicate(t *testing.T) {
 	}
 }
 
+func launch(t *testing.T) string {
+	is := require.New(t)
+	pool, err := dockertest.NewPool("")
+	is.NoError(err, "Could not connect to docker: %s", err)
+
+	options := &dockertest.RunOptions{
+		Repository: "ghcr.io/cerbos/cerbos",
+		Tag:        "0.12.0",
+		Cmd:        []string{"server", "--config=/config/conf.yaml"},
+	}
+
+	_, currFile, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatalf("could not detect current file directory")
+	}
+	pwd, err := os.Getwd()
+	if err != nil {
+		log.Fatalf("failed to get working directory: %s", err)
+	}
+	t.Log("PWD:", pwd)
+	resource, err := pool.RunWithOptions(options, func(config *docker.HostConfig) {
+		srcDir := filepath.Join(filepath.Dir(currFile), "cerbos")
+		t.Log(srcDir)
+		config.Mounts = []docker.HostMount{
+			{
+				Target: "/config",
+				Source: filepath.Join(srcDir, "config"),
+				Type:   "bind",
+			},
+			{
+				Target: "/policies",
+				Source: filepath.Join(srcDir, "policies"),
+				Type:   "bind",
+			},
+		}
+	})
+	is.NoError(err, "Could not start resource: %s", err)
+
+	t.Cleanup(func() {
+		if err := pool.Purge(resource); err != nil {
+			t.Errorf("Failed to cleanup resources: %v", err)
+		}
+	})
+
+	deadline, ok := t.Deadline()
+	if !ok {
+		deadline = time.Now().Add(5 * time.Minute)
+	}
+
+	ctx, cancelFunc := context.WithDeadline(context.Background(), deadline)
+	t.Cleanup(cancelFunc)
+
+	port := resource.GetPort("3592/tcp")
+	cerbosAddr := fmt.Sprintf("127.0.0.1:%s", port)
+	t.Log(cerbosAddr)
+	healthEndpoint := fmt.Sprintf("http://%s/_cerbos/health", cerbosAddr)
+	is.NoError(pool.Retry(func() error {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		request, err := http.NewRequestWithContext(ctx, "GET", healthEndpoint, nil)
+		if err != nil {
+			return err
+		}
+		resp, err := http.DefaultClient.Do(request)
+		if err != nil {
+			return err
+		}
+		if resp.StatusCode != http.StatusOK {
+			return errors.New("health check request status not OK")
+		}
+		return nil
+	}), "Cerbos container did not start")
+
+	return cerbosAddr
+}
+
 func TestIntegration(t *testing.T) {
+	cerbosAddr := launch(t)
+
 	is := require.New(t)
 	nick, simon, mary, christina, aleks := "Nick", "Simon", "Mary", "Christina", "Aleks"
 
@@ -72,11 +162,11 @@ func TestIntegration(t *testing.T) {
 			want:     []string{nick, aleks},
 		},
 	}
-	cerbosAddr := "localhost:3592"
+
 	c, err := cerbos.New(cerbosAddr, cerbos.WithPlaintext())
 	is.NoError(err)
 	ctx := context.Background()
-	repo, err := New(ent.Log(t.Log), ent.Debug())
+	repo, err := db.New(BuildPredicateType(BuildPredicate), ent.Log(t.Log), ent.Debug())
 	is.NoError(err)
 	err = repo.SetupDatabase(ctx)
 	is.NoError(err)
