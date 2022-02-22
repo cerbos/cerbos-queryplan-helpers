@@ -1,0 +1,79 @@
+[
+  {
+    "name": "Alice",
+    "username": "alice",
+    "email": "alice@cerbos.demo",
+    "role": "admin",
+    "department": "IT"
+  },
+  {
+    "name": "John",
+    "username": "john",
+    "email": "john@cerbos.demo",
+    "role": "user",
+    "department": "Sales",
+    "contacts": [
+      {
+        "firstName": "Nick",
+        "lastName": "Smyth",
+        "marketingOptIn": true,
+        "active": true,
+        "company": {
+          "name": "Coca Cola"
+        }
+      },
+      {
+        "firstName": "Simon",
+        "lastName": "Jaff",
+        "marketingOptIn": true,
+        "active": false,
+        "company": {
+          "name": "Legal Co"
+        }
+      }
+    ]
+  },
+  {
+    "name": "Sarah",
+    "username": "sarah",
+    "email": "sarah@cerbos.demo",
+    "role": "user",
+    "department": "Sales",
+    "contacts": [
+      {
+        "firstName": "Mary",
+        "lastName": "Jane",
+        "active": true,
+        "marketingOptIn": false,
+        "company": {
+          "name": "Pepsi Co"
+        }
+      },
+      {
+        "firstName": "Christina",
+        "lastName": "Baker",
+        "marketingOptIn": true,
+        "active": false,
+        "company": {
+          "name": "Capri Sun"
+        }
+      },
+      {
+        "firstName": "Aleks",
+        "lastName": "Kozlov",
+        "marketingOptIn": true,
+        "active": true,
+        "company": {
+          "name": "Pepsi Co"
+        }
+      }
+    ]
+  },
+  {
+    "name": "Geri",
+    "username": "geri",
+    "email": "geri@cerbos.demo",
+    "role": "user",
+    "department": "Marketing"
+  }
+]

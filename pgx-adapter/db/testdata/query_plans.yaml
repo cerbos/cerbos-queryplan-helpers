@@ -1,0 +1,44 @@
+---
+- input:
+    expression:
+      operator: lt
+      operands:
+        - expression:
+            operator: add
+            operands:
+              - variable: a
+              - variable: b
+        - value: 10
+  sql: '"a" + "b" < $1'
+  args:
+    - 10
+- input:
+    expression:
+      operator: lt
+      operands:
+        - expression:
+            operator: add
+            operands:
+              - variable: a
+              - variable: b
+        - variable: c
+  sql: '"a" + "b" < "c"'
+  args:
+- input:
+    expression:
+      operator: and
+      operands:
+        - expression:
+            operator: eq
+            operands:
+              - variable: R.attr.status
+              - value: "PENDING_APPROVAL"
+        - expression:
+            operator: ne
+            operands:
+              - variable: R.attr.owner
+              - value: "maggie"
+  sql: '"status" = $1 AND "owner" <> $2'
+  args:
+    - "PENDING_APPROVAL"
+    - "maggie"
