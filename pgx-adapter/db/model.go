@@ -5,26 +5,26 @@ import (
 )
 
 type Contact struct {
-	Id             int
+	ID             int
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 	FirstName      string
 	LastName       string
-	OwnerId        int
-	CompanyId      int
+	OwnerID        int
+	CompanyID      int
 	Active         bool
 	MarketingOptIn bool
 }
 
 type Company struct {
-	Id        int
+	ID        int
 	Name      string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
 
 type User struct {
-	Id         int
+	ID         int
 	Username   string
 	Email      string
 	Name       string

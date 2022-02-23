@@ -33,4 +33,4 @@ CREATE TABLE IF NOT EXISTS contacts (
 CREATE USER cerbforce_user WITH PASSWORD 'cerb';
 GRANT CONNECT ON DATABASE postgres TO cerbforce_user;
 GRANT USAGE ON SCHEMA cerbforce TO cerbforce_user;
-GRANT SELECT,INSERT,UPDATE,DELETE ON cerbforce.users, cerbforce.companies, cerbforce.users TO cerbforce_user;
+GRANT SELECT,INSERT,UPDATE,DELETE ON cerbforce.users, cerbforce.companies, cerbforce.contacts TO cerbforce_user;
