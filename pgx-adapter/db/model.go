@@ -1,3 +1,6 @@
+// Copyright 2021-2022 Zenauth Ltd.
+// SPDX-License-Identifier: Apache-2.0
+
 package db
 
 import (
@@ -5,11 +8,11 @@ import (
 )
 
 type Contact struct {
-	ID             int
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 	FirstName      string
 	LastName       string
+	ID             int
 	OwnerID        int
 	CompanyID      int
 	Active         bool
@@ -17,17 +20,17 @@ type Contact struct {
 }
 
 type Company struct {
-	ID        int
-	Name      string
 	CreatedAt time.Time
 	UpdatedAt time.Time
+	Name      string
+	ID        int
 }
 
 type User struct {
-	ID         int
 	Username   string
 	Email      string
 	Name       string
 	Role       string
 	Department string
+	ID         int
 }

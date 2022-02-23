@@ -1,11 +1,15 @@
+// Copyright 2021-2022 Zenauth Ltd.
+// SPDX-License-Identifier: Apache-2.0
+
 package db
 
 import (
 	"context"
-	"github.com/stretchr/testify/require"
-	"testing"
 	"fmt"
+	"testing"
+
 	"github.com/jackc/pgx/v4"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_SetupDatabase(t *testing.T) {
@@ -33,10 +37,12 @@ func Test_SetupDatabase(t *testing.T) {
 
 	connURL := fmt.Sprintf("postgres://cerbforce_user:cerb@localhost:%d/postgres?sslmode=disable&search_path=cerbforce", port)
 	repo, err := New(ctx, nil, connURL)
-	client := repo.client
+	is.NoError(err)
+
 	t.Cleanup(func() {
-		client.Close(ctx)
+		repo.client.Close(ctx)
 	})
+
 	user, err := repo.GetUserByUsername(ctx, "alice")
 	is.NoError(err)
 	is.Equal(user.Department, "IT")

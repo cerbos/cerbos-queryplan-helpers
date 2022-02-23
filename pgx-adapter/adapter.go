@@ -1,14 +1,18 @@
+// Copyright 2021-2022 Zenauth Ltd.
+// SPDX-License-Identifier: Apache-2.0
+
 package main
 
 import (
 	"errors"
 	"fmt"
+	"strings"
+
 	responsev1 "github.com/cerbos/cerbos/api/genpb/cerbos/response/v1"
 	"github.com/iancoleman/strcase"
-	"strings"
 )
 
-var toSqlOp = map[string]string{
+var toSQLOp = map[string]string{
 	"eq":   "=",
 	"ne":   "<>",
 	"lt":   "<",
@@ -23,9 +27,9 @@ var toSqlOp = map[string]string{
 	"in":   "IN",
 }
 
-var toSqlField = map[string]string{}
+var toSQLField = map[string]string{}
 
-var ExpressionExpectedError = errors.New("expected expression")
+var ErrExpressionExpected = errors.New("expected expression")
 
 type BuildPredicateType func(e *responsev1.ResourcesQueryPlanResponse_Expression_Operand_Expression) (where string, args []interface{}, err error)
 
@@ -45,13 +49,13 @@ func buildPredicateImpl(e *responsev1.ResourcesQueryPlanResponse_Expression_Oper
 				b.WriteString(op)
 				b.WriteRune(' ')
 			}
-			if oe, ok := o.GetNode().(*responsev1.ResourcesQueryPlanResponse_Expression_Operand_Expression); !ok {
-				return ExpressionExpectedError
-			} else {
+			if oe, ok := o.GetNode().(*responsev1.ResourcesQueryPlanResponse_Expression_Operand_Expression); ok {
 				err = buildPredicateImpl(oe, b, args)
 				if err != nil {
 					return err
 				}
+			} else {
+				return ErrExpressionExpected
 			}
 		}
 		b.WriteRune(')')
@@ -60,9 +64,7 @@ func buildPredicateImpl(e *responsev1.ResourcesQueryPlanResponse_Expression_Oper
 		o := e.Expression.Operands[0]
 		b.WriteRune('(')
 		b.WriteString("NOT ")
-		if oe, ok := o.GetNode().(*responsev1.ResourcesQueryPlanResponse_Expression_Operand_Expression); !ok {
-			return ExpressionExpectedError
-		} else {
+		if oe, ok := o.GetNode().(*responsev1.ResourcesQueryPlanResponse_Expression_Operand_Expression); ok {
 			err = buildPredicateImpl(oe, b, args)
 			if err != nil {
 				return err
@@ -70,11 +72,12 @@ func buildPredicateImpl(e *responsev1.ResourcesQueryPlanResponse_Expression_Oper
 			b.WriteRune(')')
 			return nil
 		}
+		return ErrExpressionExpected
 	default:
-		if len(e.Expression.Operands) != 2 {
+		if len(e.Expression.Operands) != 2 { //nolint:gomnd
 			return fmt.Errorf("expected a binary operation: op = %q, # of operands = %d", e.Expression.Operator, len(e.Expression.Operands))
 		}
-		op, ok := toSqlOp[e.Expression.Operator]
+		op, ok := toSQLOp[e.Expression.Operator]
 		if !ok {
 			return fmt.Errorf("unsupported operation %q", e.Expression.Operator)
 		}
@@ -124,7 +127,7 @@ func getFieldName(name string) string {
 	name = strings.TrimPrefix(name, "request.resource.attr.")
 	name = strings.TrimPrefix(name, "R.attr.")
 
-	if s, ok := toSqlField[name]; ok {
+	if s, ok := toSQLField[name]; ok {
 		return s
 	}
 

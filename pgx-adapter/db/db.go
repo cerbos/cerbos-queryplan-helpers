@@ -1,3 +1,6 @@
+// Copyright 2021-2022 Zenauth Ltd.
+// SPDX-License-Identifier: Apache-2.0
+
 package db
 
 import (
@@ -6,10 +9,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	responsev1 "github.com/cerbos/cerbos/api/genpb/cerbos/response/v1"
 
-	"github.com/jackc/pgx/v4"
+	responsev1 "github.com/cerbos/cerbos/api/genpb/cerbos/response/v1"
 	"github.com/georgysavva/scany/pgxscan"
+	"github.com/jackc/pgx/v4"
 )
 
 //go:embed seed.json
@@ -54,8 +57,9 @@ func (cli *Client) GetContacts(ctx context.Context, filter *responsev1.Resources
 			return nil, err
 		}
 		return res, nil
+	default:
+		return nil, fmt.Errorf("unexpected filter.Kind: %s", filter.Kind)
 	}
-	return nil, errors.New("unknown filter kind")
 }
 
 func New(ctx context.Context, b predicateBuilder, url string) (*Client, error) {
@@ -120,7 +124,6 @@ VALUES ($1, $2, $3, $4, $5, $6)`, c.FirstName, c.LastName, uid, cid, c.Active, c
 				if err != nil {
 					return fmt.Errorf("failed creating a contact: %w", err)
 				}
-
 			}
 		}
 		if err != nil {
@@ -137,12 +140,12 @@ type Seed struct {
 	Role       string `json:"role"`
 	Department string `json:"department"`
 	Contacts   []struct {
+		Company *struct {
+			Name string `json:"name"`
+		} `json:"company"`
 		FirstName      string `json:"firstName"`
 		LastName       string `json:"lastName"`
 		MarketingOptIn bool   `json:"marketingOptIn"`
 		Active         bool   `json:"active"`
-		Company        *struct {
-			Name string `json:"name"`
-		} `json:"company"`
 	} `json:"contacts,omitempty"`
 }

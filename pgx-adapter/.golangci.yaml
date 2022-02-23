@@ -1,0 +1,131 @@
+---
+run:
+  timeout: 300s
+  skip-dirs:
+    - api
+    - deploy
+    - docs
+    - hack
+    - internal/test/mocks
+  build-tags:
+    - tests
+
+linters-settings:
+  exhaustive:
+    default-signifies-exhaustive: true
+
+  gci:
+    local-prefixes: github.com/cerbos/cerbos-go-adapters/pgx-adapter
+
+  gofumpt:
+    extra-rules: true
+  goheader:
+    values:
+      const:
+        COMPANY: Zenauth Ltd.
+    template: |-
+      Copyright {{ YEAR-RANGE }} {{ COMPANY }}
+      SPDX-License-Identifier: Apache-2.0
+
+  govet:
+    enable-all: true 
+    disable:
+      - shadow
+
+  nolintlint:
+    allow-unused: false
+    allow-leading-space: false
+    require-specific: true
+
+  tagliatelle:
+    case:
+      rules:
+        json: goCamel
+        yaml: goCamel
+        xml: goCamel
+        bson: goCamel
+
+linters:
+  enable:
+    - asciicheck
+    - bidichk
+    - bodyclose
+    - dupl
+    - durationcheck
+    - errorlint
+    - exhaustive
+    - exportloopref
+    - forbidigo
+    - forcetypeassert
+    - gci
+    - goconst
+    - gocritic
+    - godot
+    - gofumpt
+    - goimports
+    - goheader
+    - gomnd
+    - gomoddirectives
+    - gosec
+    - govet
+    - ifshort
+    - importas
+    - makezero
+    - misspell
+    - nakedret
+    - nestif
+    - nilerr
+    - noctx
+    - nolintlint
+    - prealloc
+    - predeclared
+    - promlinter
+    - revive
+    - rowserrcheck
+    - sqlclosecheck
+    - tagliatelle
+    - tenv
+    - thelper
+    - tparallel
+    - unconvert
+    - unparam
+    - wastedassign
+    - whitespace
+  disable:
+    - cyclop
+    - depguard
+    - dogsled
+    - exhaustivestruct
+    - funlen
+    - gochecknoglobals
+    - gochecknoinits
+    - gocognit
+    - gocyclo
+    - godox
+    - goerr113
+    - gofmt
+    - golint
+    - gomodguard
+    - goprintffuncname
+    - interfacer
+    - lll
+    - maligned
+    - nlreturn
+    - paralleltest
+    - stylecheck
+    - testpackage
+    - wrapcheck
+    - wsl
+
+issues:
+  max-same-issues: 30
+
+  fix: true
+
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - forcetypeassert
+        - goconst
+        - gomnd
+        - govet
