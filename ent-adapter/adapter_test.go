@@ -1,12 +1,22 @@
+// Copyright 2021-2022 Zenauth Ltd.
+// SPDX-License-Identifier: Apache-2.0
+
 package main
 
 import (
 	"context"
 	_ "embed"
 	"encoding/json"
-	"entgo.io/ent/dialect"
 	"errors"
 	"fmt"
+	"net/http"
+	"path/filepath"
+	"runtime"
+	"strconv"
+	"testing"
+	"time"
+
+	"entgo.io/ent/dialect"
 	"github.com/cerbos/cerbos-go-adapters/ent-adapter/db"
 	"github.com/cerbos/cerbos-go-adapters/ent-adapter/ent"
 	responsev1 "github.com/cerbos/cerbos/api/genpb/cerbos/response/v1"
@@ -16,12 +26,6 @@ import (
 	"github.com/ory/dockertest/v3/docker"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/encoding/protojson"
-	"net/http"
-	"path/filepath"
-	"runtime"
-	"strconv"
-	"testing"
-	"time"
 )
 
 //go:embed db/testdata/query_plans.yaml
@@ -29,7 +33,7 @@ var yamlBytes []byte
 
 type Test struct {
 	Input json.RawMessage `json:"input"`
-	Sql   string          `json:"sql"`
+	SQL   string          `json:"sql"`
 	Args  []interface{}   `json:"args"`
 }
 
@@ -41,7 +45,7 @@ func Test_BuildPredicate(t *testing.T) {
 	err = json.Unmarshal(jsonBytes, &tests)
 	is.NoError(err)
 	for _, tt := range tests {
-		t.Run(tt.Sql, func(t *testing.T) {
+		t.Run(tt.SQL, func(t *testing.T) {
 			is := require.New(t)
 			e := new(responsev1.ResourcesQueryPlanResponse_Expression_Operand)
 			err := protojson.Unmarshal(tt.Input, e)
@@ -50,13 +54,15 @@ func Test_BuildPredicate(t *testing.T) {
 			is.NoError(err)
 			p.SetDialect(dialect.Postgres)
 			q, args := p.Query()
-			is.Equal(tt.Sql, q)
+			is.Equal(tt.SQL, q)
 			is.Equal(tt.Args, args)
 		})
 	}
 }
 
 func runCerbos(ctx context.Context, t *testing.T) string {
+	t.Helper()
+
 	is := require.New(t)
 	pool, err := dockertest.NewPool("")
 	is.NoError(err, "Could not connect to docker: %s", err)
@@ -121,6 +127,7 @@ func runCerbos(ctx context.Context, t *testing.T) string {
 		if err != nil {
 			return err
 		}
+		defer resp.Body.Close()
 		if resp.StatusCode != http.StatusOK {
 			return errors.New("health check request status not OK")
 		}
@@ -178,7 +185,7 @@ func TestIntegration(t *testing.T) {
 			is.NoError(err)
 
 			filter := queryPlan.GetFilter()
-			//t.Log(protojson.Format(filter))
+			// t.Log(protojson.Format(filter))
 			contacts, err := repo.GetContacts(ctx, filter)
 			is.NoError(err)
 			is.ElementsMatch(getNames(contacts), tt.want, tt.username)

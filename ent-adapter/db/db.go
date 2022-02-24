@@ -1,16 +1,22 @@
+// Copyright 2021-2022 Zenauth Ltd.
+// SPDX-License-Identifier: Apache-2.0
+
 package db
 
 import (
 	"context"
 	_ "embed"
 	"encoding/json"
-	"entgo.io/ent/dialect"
-	"entgo.io/ent/dialect/sql"
 	"errors"
 	"fmt"
+
+	"entgo.io/ent/dialect"
+	"entgo.io/ent/dialect/sql"
 	"github.com/cerbos/cerbos-go-adapters/ent-adapter/ent"
 	"github.com/cerbos/cerbos-go-adapters/ent-adapter/ent/user"
 	responsev1 "github.com/cerbos/cerbos/api/genpb/cerbos/response/v1"
+
+	// register sqlite driver.
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -46,8 +52,9 @@ func (cli *Client) GetContacts(ctx context.Context, filter *responsev1.Resources
 		return cli.client.Contact.Query().Where(func(s *sql.Selector) {
 			s.Where(p)
 		}).All(ctx)
+	default:
+		return nil, errors.New("unspecified filter kind")
 	}
-	return nil, errors.New("unknown filter kind")
 }
 
 func New(b predicateBuilder, options ...ent.Option) (*Client, error) {
@@ -106,11 +113,9 @@ func (cli *Client) SetupDatabase(ctx context.Context) error {
 					SetOwner(user).
 					SetNillableCompanyID(cid).
 					Save(ctx)
-
 				if err != nil {
 					return fmt.Errorf("failed creating a contact: %w", err)
 				}
-
 			}
 		}
 		if err != nil {
@@ -127,12 +132,12 @@ type Seed struct {
 	Role       string `json:"role"`
 	Department string `json:"department"`
 	Contacts   []struct {
+		Company *struct {
+			Name string `json:"name"`
+		} `json:"company"`
 		FirstName      string `json:"firstName"`
 		LastName       string `json:"lastName"`
 		MarketingOptIn bool   `json:"marketingOptIn"`
 		Active         bool   `json:"active"`
-		Company        *struct {
-			Name string `json:"name"`
-		} `json:"company"`
 	} `json:"contacts,omitempty"`
 }
