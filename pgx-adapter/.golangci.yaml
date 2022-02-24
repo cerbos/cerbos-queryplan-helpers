@@ -1,14 +1,6 @@
 ---
 run:
   timeout: 300s
-  skip-dirs:
-    - api
-    - deploy
-    - docs
-    - hack
-    - internal/test/mocks
-  build-tags:
-    - tests
 
 linters-settings:
   exhaustive:
@@ -28,7 +20,7 @@ linters-settings:
       SPDX-License-Identifier: Apache-2.0
 
   govet:
-    enable-all: true 
+    enable-all: true
     disable:
       - shadow
 
