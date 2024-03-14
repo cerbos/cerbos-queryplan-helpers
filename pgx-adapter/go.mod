@@ -11,7 +11,7 @@ require (
 	github.com/jackc/pgx/v4 v4.18.2
 	github.com/ory/dockertest/v3 v3.8.1
 	github.com/stretchr/testify v1.8.1
-	google.golang.org/protobuf v1.30.0
+	google.golang.org/protobuf v1.33.0
 )
 
 require (
