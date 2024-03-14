@@ -10,7 +10,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.11
 	github.com/ory/dockertest/v3 v3.8.1
 	github.com/stretchr/testify v1.7.1-0.20210427113832-6241f9ab9942
-	google.golang.org/protobuf v1.30.0
+	google.golang.org/protobuf v1.33.0
 )
 
 require (
