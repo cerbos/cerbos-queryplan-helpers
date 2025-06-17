@@ -1,6 +1,7 @@
 module github.com/cerbos/cerbos-go-adapters/ent-adapter
 
-go 1.17
+go 1.23.0
+
 toolchain go1.24.1
 
 require (
@@ -60,9 +61,9 @@ require (
 	go.uber.org/multierr v1.7.0 // indirect
 	go.uber.org/zap v1.20.0 // indirect
 	golang.org/x/mod v0.17.0 // indirect
-	golang.org/x/net v0.36.0 // indirect
-	golang.org/x/sys v0.30.0 // indirect
-	golang.org/x/text v0.22.0 // indirect
+	golang.org/x/net v0.38.0 // indirect
+	golang.org/x/sys v0.31.0 // indirect
+	golang.org/x/text v0.23.0 // indirect
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
 	google.golang.org/grpc v1.56.3 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
