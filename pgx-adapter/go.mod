@@ -1,6 +1,6 @@
 module github.com/cerbos/cerbos-go-adapters/pgx-adapter
 
-go 1.17
+go 1.23.0
 
 require (
 	github.com/cerbos/cerbos v0.12.0
@@ -24,7 +24,7 @@ require (
 	github.com/containerd/continuity v0.2.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/docker/cli v20.10.12+incompatible // indirect
-	github.com/docker/docker v26.1.5+incompatible // indirect
+	github.com/docker/docker v28.0.0+incompatible // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
 	github.com/envoyproxy/protoc-gen-validate v0.10.1 // indirect
