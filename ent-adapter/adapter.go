@@ -1,4 +1,4 @@
-// Copyright 2021-2022 Zenauth Ltd.
+// Copyright 2021-2025 Zenauth Ltd.
 // SPDX-License-Identifier: Apache-2.0
 
 package main
@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"entgo.io/ent/dialect/sql"
-	responsev1 "github.com/cerbos/cerbos/api/genpb/cerbos/response/v1"
+	enginev1 "github.com/cerbos/cerbos/api/genpb/cerbos/engine/v1"
 	"github.com/iancoleman/strcase"
 )
 
@@ -34,13 +34,18 @@ var toEntField = map[string]string{
 
 var ErrExpressionExpected = errors.New("expected expression")
 
-type BuildPredicateType func(e *responsev1.ResourcesQueryPlanResponse_Expression_Operand_Expression) (p *sql.Predicate, err error)
+type filterOpExpression = enginev1.PlanResourcesFilter_Expression_Operand_Expression
+type filterOpValue = enginev1.PlanResourcesFilter_Expression_Operand_Value
+type filterOpVariable = enginev1.PlanResourcesFilter_Expression_Operand_Variable
+type filterOp = enginev1.PlanResourcesFilter_Expression_Operand
 
-func (t BuildPredicateType) BuildPredicate(e *responsev1.ResourcesQueryPlanResponse_Expression_Operand_Expression) (p *sql.Predicate, err error) {
+type BuildPredicateType func(e *filterOpExpression) (p *sql.Predicate, err error)
+
+func (t BuildPredicateType) BuildPredicate(e *filterOpExpression) (p *sql.Predicate, err error) {
 	return t(e)
 }
 
-func BuildPredicate(e *responsev1.ResourcesQueryPlanResponse_Expression_Operand_Expression) (p *sql.Predicate, err error) {
+func BuildPredicate(e *filterOpExpression) (p *sql.Predicate, err error) {
 	if e == nil {
 		return nil, nil
 	}
@@ -48,7 +53,7 @@ func BuildPredicate(e *responsev1.ResourcesQueryPlanResponse_Expression_Operand_
 	case "or", "and":
 		ps := make([]*sql.Predicate, len(e.Expression.Operands))
 		for i, o := range e.Expression.Operands {
-			if oe, ok := o.GetNode().(*responsev1.ResourcesQueryPlanResponse_Expression_Operand_Expression); ok {
+			if oe, ok := o.GetNode().(*filterOpExpression); ok {
 				ps[i], err = BuildPredicate(oe)
 				if err != nil {
 					return nil, err
@@ -63,7 +68,7 @@ func BuildPredicate(e *responsev1.ResourcesQueryPlanResponse_Expression_Operand_
 		return sql.And(ps...), nil
 	case "not":
 		o := e.Expression.Operands[0]
-		if oe, ok := o.GetNode().(*responsev1.ResourcesQueryPlanResponse_Expression_Operand_Expression); ok {
+		if oe, ok := o.GetNode().(*filterOpExpression); ok {
 			p, err = BuildPredicate(oe)
 			if err != nil {
 				return nil, err
@@ -95,9 +100,9 @@ func BuildPredicate(e *responsev1.ResourcesQueryPlanResponse_Expression_Operand_
 	}
 }
 
-func newBuilder(operand *responsev1.ResourcesQueryPlanResponse_Expression_Operand) (func(*sql.Builder) *sql.Builder, error) {
+func newBuilder(operand *filterOp) (func(*sql.Builder) *sql.Builder, error) {
 	switch e := operand.Node.(type) {
-	case *responsev1.ResourcesQueryPlanResponse_Expression_Operand_Expression:
+	case *filterOpExpression:
 		p, err := BuildPredicate(e)
 		if err != nil {
 			return nil, err
@@ -105,11 +110,11 @@ func newBuilder(operand *responsev1.ResourcesQueryPlanResponse_Expression_Operan
 		return func(b *sql.Builder) *sql.Builder {
 			return b.Join(p)
 		}, nil
-	case *responsev1.ResourcesQueryPlanResponse_Expression_Operand_Variable:
+	case *filterOpVariable:
 		return func(b *sql.Builder) *sql.Builder {
 			return b.Ident(getFieldName(e.Variable))
 		}, nil
-	case *responsev1.ResourcesQueryPlanResponse_Expression_Operand_Value:
+	case *filterOpValue:
 		return func(b *sql.Builder) *sql.Builder {
 			return b.Arg(e.Value.AsInterface())
 		}, nil

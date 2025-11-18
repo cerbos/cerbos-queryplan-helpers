@@ -1,4 +1,4 @@
-// Copyright 2021-2022 Zenauth Ltd.
+// Copyright 2021-2025 Zenauth Ltd.
 // SPDX-License-Identifier: Apache-2.0
 
 package main
@@ -19,8 +19,8 @@ import (
 	"entgo.io/ent/dialect"
 	"github.com/cerbos/cerbos-go-adapters/ent-adapter/db"
 	"github.com/cerbos/cerbos-go-adapters/ent-adapter/ent"
+	"github.com/cerbos/cerbos-sdk-go/cerbos"
 	responsev1 "github.com/cerbos/cerbos/api/genpb/cerbos/response/v1"
-	cerbos "github.com/cerbos/cerbos/client"
 	"github.com/ghodss/yaml"
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
@@ -76,7 +76,7 @@ func runCerbos(ctx context.Context, t *testing.T) string {
 
 	options := &dockertest.RunOptions{
 		Repository: "ghcr.io/cerbos/cerbos",
-		Tag:        "0.12.0",
+		Tag:        "0.47.0",
 		Cmd:        []string{"server", "--config=/config/conf.yaml"},
 		WorkingDir: srcDir,
 	}
