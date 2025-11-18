@@ -14,7 +14,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/cerbos/cerbos-go-adapters/ent-adapter/ent"
 	"github.com/cerbos/cerbos-go-adapters/ent-adapter/ent/user"
-	responsev1 "github.com/cerbos/cerbos/api/genpb/cerbos/response/v1"
+	enginev1 "github.com/cerbos/cerbos/api/genpb/cerbos/engine/v1"
 
 	// register sqlite driver.
 	_ "github.com/mattn/go-sqlite3"
@@ -24,7 +24,7 @@ import (
 var seed []byte
 
 type predicateBuilder interface {
-	BuildPredicate(e *responsev1.ResourcesQueryPlanResponse_Expression_Operand_Expression) (p *sql.Predicate, err error)
+	BuildPredicate(e *enginev1.PlanResourcesFilter_Expression_Operand_Expression) (p *sql.Predicate, err error)
 }
 
 type Client struct {
@@ -32,17 +32,17 @@ type Client struct {
 	predicateBuilder predicateBuilder
 }
 
-func (cli *Client) GetContacts(ctx context.Context, filter *responsev1.ResourcesQueryPlanResponse_Filter) ([]*ent.Contact, error) {
+func (cli *Client) GetContacts(ctx context.Context, filter *enginev1.PlanResourcesFilter) ([]*ent.Contact, error) {
 	if filter == nil {
 		return nil, errors.New("\"filter\" is nil")
 	}
 	switch filter.Kind {
-	case responsev1.ResourcesQueryPlanResponse_Filter_KIND_ALWAYS_DENIED:
+	case enginev1.PlanResourcesFilter_KIND_ALWAYS_DENIED:
 		return nil, nil
-	case responsev1.ResourcesQueryPlanResponse_Filter_KIND_ALWAYS_ALLOWED:
+	case enginev1.PlanResourcesFilter_KIND_ALWAYS_ALLOWED:
 		return cli.client.Contact.Query().All(ctx)
-	case responsev1.ResourcesQueryPlanResponse_Filter_KIND_CONDITIONAL:
-		p, err := cli.predicateBuilder.BuildPredicate(filter.Condition.GetNode().(*responsev1.ResourcesQueryPlanResponse_Expression_Operand_Expression))
+	case enginev1.PlanResourcesFilter_KIND_CONDITIONAL:
+		p, err := cli.predicateBuilder.BuildPredicate(filter.Condition.GetNode().(*enginev1.PlanResourcesFilter_Expression_Operand_Expression))
 		if err != nil {
 			return nil, err
 		}

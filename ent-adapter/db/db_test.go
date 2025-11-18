@@ -46,7 +46,4 @@ func maryJane() predicate.Contact {
 			sql.EQ(contact.FieldLastName, "Jane"),
 		))
 	}
-	// return contact.And(
-	//	contact.FirstName("Mary"),
-	//	contact.LastName("Jane"))
 }
