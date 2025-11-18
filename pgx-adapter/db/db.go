@@ -10,7 +10,7 @@ import (
 	"errors"
 	"fmt"
 
-	responsev1 "github.com/cerbos/cerbos/api/genpb/cerbos/response/v1"
+	enginev1 "github.com/cerbos/cerbos/api/genpb/cerbos/engine/v1"
 	"github.com/georgysavva/scany/pgxscan"
 	"github.com/jackc/pgx/v4"
 )
@@ -19,7 +19,7 @@ import (
 var seed []byte
 
 type predicateBuilder interface {
-	BuildPredicate(e *responsev1.ResourcesQueryPlanResponse_Expression_Operand_Expression) (where string, args []interface{}, err error)
+	BuildPredicate(e *enginev1.PlanResourcesFilter_Expression_Operand_Expression) (where string, args []interface{}, err error)
 }
 
 type Client struct {
@@ -35,17 +35,17 @@ func (cli *Client) GetAllContacts(ctx context.Context) (res []*Contact, err erro
 	return res, nil
 }
 
-func (cli *Client) GetContacts(ctx context.Context, filter *responsev1.ResourcesQueryPlanResponse_Filter) (res []*Contact, err error) {
+func (cli *Client) GetContacts(ctx context.Context, filter *enginev1.PlanResourcesFilter) (res []*Contact, err error) {
 	if filter == nil {
 		return nil, errors.New("\"filter\" is nil")
 	}
 	switch filter.Kind {
-	case responsev1.ResourcesQueryPlanResponse_Filter_KIND_ALWAYS_DENIED:
+	case enginev1.PlanResourcesFilter_KIND_ALWAYS_DENIED:
 		return nil, nil
-	case responsev1.ResourcesQueryPlanResponse_Filter_KIND_ALWAYS_ALLOWED:
+	case enginev1.PlanResourcesFilter_KIND_ALWAYS_ALLOWED:
 		return cli.GetAllContacts(ctx)
-	case responsev1.ResourcesQueryPlanResponse_Filter_KIND_CONDITIONAL:
-		where, args, err := cli.predicateBuilder.BuildPredicate(filter.Condition.GetNode().(*responsev1.ResourcesQueryPlanResponse_Expression_Operand_Expression))
+	case enginev1.PlanResourcesFilter_KIND_CONDITIONAL:
+		where, args, err := cli.predicateBuilder.BuildPredicate(filter.Condition.GetNode().(*enginev1.PlanResourcesFilter_Expression_Operand_Expression))
 		if err != nil {
 			return nil, err
 		}

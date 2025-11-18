@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"strings"
 
-	responsev1 "github.com/cerbos/cerbos/api/genpb/cerbos/response/v1"
+	enginev1 "github.com/cerbos/cerbos/api/genpb/cerbos/engine/v1"
 	"github.com/iancoleman/strcase"
 )
 
@@ -31,13 +31,18 @@ var toSQLField = map[string]string{}
 
 var ErrExpressionExpected = errors.New("expected expression")
 
-type BuildPredicateType func(e *responsev1.ResourcesQueryPlanResponse_Expression_Operand_Expression) (where string, args []interface{}, err error)
+type filterOpExpression = enginev1.PlanResourcesFilter_Expression_Operand_Expression
+type filterOpValue = enginev1.PlanResourcesFilter_Expression_Operand_Value
+type filterOpVariable = enginev1.PlanResourcesFilter_Expression_Operand_Variable
+type filterOp = enginev1.PlanResourcesFilter_Expression_Operand
 
-func (t BuildPredicateType) BuildPredicate(e *responsev1.ResourcesQueryPlanResponse_Expression_Operand_Expression) (where string, args []interface{}, err error) {
+type BuildPredicateType func(e *filterOpExpression) (where string, args []interface{}, err error)
+
+func (t BuildPredicateType) BuildPredicate(e *filterOpExpression) (where string, args []interface{}, err error) {
 	return t(e)
 }
 
-func buildPredicateImpl(e *responsev1.ResourcesQueryPlanResponse_Expression_Operand_Expression, b *strings.Builder, args *[]interface{}) (err error) {
+func buildPredicateImpl(e *filterOpExpression, b *strings.Builder, args *[]interface{}) (err error) {
 	switch e.Expression.Operator {
 	case "or", "and":
 		b.WriteRune('(')
@@ -49,7 +54,7 @@ func buildPredicateImpl(e *responsev1.ResourcesQueryPlanResponse_Expression_Oper
 				b.WriteString(op)
 				b.WriteRune(' ')
 			}
-			if oe, ok := o.GetNode().(*responsev1.ResourcesQueryPlanResponse_Expression_Operand_Expression); ok {
+			if oe, ok := o.GetNode().(*filterOpExpression); ok {
 				err = buildPredicateImpl(oe, b, args)
 				if err != nil {
 					return err
@@ -64,7 +69,7 @@ func buildPredicateImpl(e *responsev1.ResourcesQueryPlanResponse_Expression_Oper
 		o := e.Expression.Operands[0]
 		b.WriteRune('(')
 		b.WriteString("NOT ")
-		if oe, ok := o.GetNode().(*responsev1.ResourcesQueryPlanResponse_Expression_Operand_Expression); ok {
+		if oe, ok := o.GetNode().(*filterOpExpression); ok {
 			err = buildPredicateImpl(oe, b, args)
 			if err != nil {
 				return err
@@ -84,16 +89,16 @@ func buildPredicateImpl(e *responsev1.ResourcesQueryPlanResponse_Expression_Oper
 		b.WriteRune('(')
 		for i, operand := range e.Expression.Operands {
 			switch eo := operand.Node.(type) {
-			case *responsev1.ResourcesQueryPlanResponse_Expression_Operand_Expression:
+			case *filterOpExpression:
 				err = buildPredicateImpl(eo, b, args)
 				if err != nil {
 					return err
 				}
-			case *responsev1.ResourcesQueryPlanResponse_Expression_Operand_Variable:
+			case *filterOpVariable:
 				b.WriteRune('"')
 				b.WriteString(getFieldName(eo.Variable))
 				b.WriteRune('"')
-			case *responsev1.ResourcesQueryPlanResponse_Expression_Operand_Value:
+			case *filterOpValue:
 				*args = append(*args, eo.Value.AsInterface())
 				b.WriteString(fmt.Sprintf("$%d", len(*args)))
 			}
@@ -109,7 +114,7 @@ func buildPredicateImpl(e *responsev1.ResourcesQueryPlanResponse_Expression_Oper
 	return nil
 }
 
-func BuildPredicate(e *responsev1.ResourcesQueryPlanResponse_Expression_Operand_Expression) (where string, args []interface{}, err error) {
+func BuildPredicate(e *filterOpExpression) (where string, args []interface{}, err error) {
 	if e == nil {
 		return "", nil, nil
 	}

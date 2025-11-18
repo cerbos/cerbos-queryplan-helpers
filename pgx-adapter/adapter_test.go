@@ -16,8 +16,8 @@ import (
 	"testing"
 	"time"
 
-	responsev1 "github.com/cerbos/cerbos/api/genpb/cerbos/response/v1"
-	cerbos "github.com/cerbos/cerbos/client"
+	"github.com/cerbos/cerbos-sdk-go/cerbos"
+	enginev1 "github.com/cerbos/cerbos/api/genpb/cerbos/engine/v1"
 	"github.com/ghodss/yaml"
 	"github.com/jackc/pgx/v4"
 	"github.com/ory/dockertest/v3"
@@ -47,10 +47,10 @@ func Test_BuildPredicate(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.SQL, func(t *testing.T) {
 			is := require.New(t)
-			e := new(responsev1.ResourcesQueryPlanResponse_Expression_Operand)
+			e := new(enginev1.PlanResourcesFilter_Expression_Operand)
 			err := protojson.Unmarshal(tt.Input, e)
 			is.NoError(err)
-			q, args, err := BuildPredicate(e.Node.(*responsev1.ResourcesQueryPlanResponse_Expression_Operand_Expression))
+			q, args, err := BuildPredicate(e.Node.(*enginev1.PlanResourcesFilter_Expression_Operand_Expression))
 			is.NoError(err)
 			is.Equal(tt.SQL, q)
 			is.Equal(tt.Args, args)
@@ -74,7 +74,7 @@ func runCerbos(ctx context.Context, t *testing.T) string {
 
 	options := &dockertest.RunOptions{
 		Repository: "ghcr.io/cerbos/cerbos",
-		Tag:        "0.12.0",
+		Tag:        "0.47.0",
 		Cmd:        []string{"server", "--config=/config/conf.yaml"},
 		WorkingDir: srcDir,
 	}
@@ -197,7 +197,7 @@ func TestIntegration(t *testing.T) {
 				WithRoles(user.Role).
 				WithAttr("department", user.Department)
 
-			queryPlan, err := c.ResourcesQueryPlan(ctx, principal, cerbos.NewResource("contact", ""), "read")
+			queryPlan, err := c.PlanResources(ctx, principal, cerbos.NewResource("contact", ""), "read")
 			is.NoError(err)
 
 			filter := queryPlan.GetFilter()

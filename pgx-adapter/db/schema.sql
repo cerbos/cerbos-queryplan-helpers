@@ -29,8 +29,11 @@ CREATE TABLE IF NOT EXISTS contacts (
     active BOOLEAN default false,
     marketing_opt_in BOOLEAN default false
 );
-
-CREATE USER cerbforce_user WITH PASSWORD 'cerb';
+DO $$
+BEGIN
+    CREATE USER cerbforce_user WITH PASSWORD 'cerb';
+EXCEPTION WHEN duplicate_object THEN
+END$$;
 GRANT CONNECT ON DATABASE postgres TO cerbforce_user;
 GRANT USAGE ON SCHEMA cerbforce TO cerbforce_user;
 GRANT SELECT,INSERT,UPDATE,DELETE ON cerbforce.users, cerbforce.companies, cerbforce.contacts TO cerbforce_user;
