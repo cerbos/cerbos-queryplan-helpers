@@ -20,7 +20,7 @@ import (
 	"github.com/cerbos/cerbos-go-adapters/ent-adapter/db"
 	"github.com/cerbos/cerbos-go-adapters/ent-adapter/ent"
 	"github.com/cerbos/cerbos-sdk-go/cerbos"
-	responsev1 "github.com/cerbos/cerbos/api/genpb/cerbos/response/v1"
+	enginev1 "github.com/cerbos/cerbos/api/genpb/cerbos/engine/v1"
 	"github.com/ghodss/yaml"
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
@@ -47,10 +47,10 @@ func Test_BuildPredicate(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.SQL, func(t *testing.T) {
 			is := require.New(t)
-			e := new(responsev1.ResourcesQueryPlanResponse_Expression_Operand)
+			e := new(enginev1.PlanResourcesFilter_Expression_Operand)
 			err := protojson.Unmarshal(tt.Input, e)
 			is.NoError(err)
-			p, err := BuildPredicate(e.Node.(*responsev1.ResourcesQueryPlanResponse_Expression_Operand_Expression))
+			p, err := BuildPredicate(e.Node.(*enginev1.PlanResourcesFilter_Expression_Operand_Expression))
 			is.NoError(err)
 			p.SetDialect(dialect.Postgres)
 			q, args := p.Query()
@@ -181,7 +181,7 @@ func TestIntegration(t *testing.T) {
 				WithRoles(user.Role).
 				WithAttr("department", user.Department)
 
-			queryPlan, err := c.ResourcesQueryPlan(ctx, principal, cerbos.NewResource("contact", ""), "read")
+			queryPlan, err := c.PlanResources(ctx, principal, cerbos.NewResource("contact", ""), "read")
 			is.NoError(err)
 
 			filter := queryPlan.GetFilter()
