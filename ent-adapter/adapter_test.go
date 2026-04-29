@@ -76,7 +76,7 @@ func runCerbos(ctx context.Context, t *testing.T) string {
 
 	options := &dockertest.RunOptions{
 		Repository: "ghcr.io/cerbos/cerbos",
-		Tag:        "0.47.0",
+		Tag:        "0.52.0",
 		Cmd:        []string{"server", "--config=/config/conf.yaml"},
 		WorkingDir: srcDir,
 	}
