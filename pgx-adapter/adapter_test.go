@@ -19,7 +19,7 @@ import (
 	"github.com/cerbos/cerbos-sdk-go/cerbos"
 	enginev1 "github.com/cerbos/cerbos/api/genpb/cerbos/engine/v1"
 	"github.com/ghodss/yaml"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
 	"github.com/stretchr/testify/require"
@@ -74,7 +74,7 @@ func runCerbos(ctx context.Context, t *testing.T) string {
 
 	options := &dockertest.RunOptions{
 		Repository: "ghcr.io/cerbos/cerbos",
-		Tag:        "0.47.0",
+		Tag:        "0.52.0",
 		Cmd:        []string{"server", "--config=/config/conf.yaml"},
 		WorkingDir: srcDir,
 	}
